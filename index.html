@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="./index.css" />
+		<title>wild west</title>
+		<script src="./confetti.js"></script>
+	</head>
+	<body onload="start()" onkeydown="keydown(event)" onkeyup="keyup(event)" style="overflow: hidden">
+		<script>
+			var body, canvas, context;
+			body = canvas = context = null;
+			var fps = (1000/32);
+			// audio
+			// var left_step = new Audio("./man/left.wav");
+			// var right_step = new Audio("./man/right.wav");
+			var stepping = new Audio("./man/stepping.wav");
+			stepping.preload = "auto";
+			stepping.loop = true;
+			// var jukebox_music = new Audio("wichitalineman.mp3");
+			var jukebox_music = new Audio("starwars.mp3");
+			jukebox_music.preload = "auto";
+			var change = new Audio("change.wav");
+			change.preload = "auto";
+			// images
+			var jukebox = new Image();
+			jukebox.src = "./jukebox.png";
+			var jukebox_x = null;
+			var jukebox_y = null;
+			var ratio = null;
+			var you_win = new Image();
+			you_win.src = "./you_win.png";
+			you_win.onload = function() {
+				ratio = (you_win.height / you_win.width);
+			}
+			var you_win_crop_width = 1;
+			var you_win_crop_height = 1;
+			// initialize 'man', man
+			var man = ["./man/man_standing_west.png",
+			"./man/man_standing_north.png",
+			"./man/man_standing_east.png",
+			"./man/man_standing_south.png",
+			"./man/man_walking_west_left.png",
+			"./man/man_walking_west_right.png",
+			"./man/man_walking_north_left.png",
+			"./man/man_walking_north_right.png",
+			"./man/man_walking_east_left.png",
+			"./man/man_walking_east_right.png",
+			"./man/man_walking_south_left.png",
+			"./man/man_walking_south_right.png",
+			"./man/man_paying.png"];
+			var man_frames = [];
+			var man_state = "standing";
+			var man_direction = "south";
+			var man_x = null;
+			var man_y = null;
+			var man_walk = 0;
+			var man_fps = 1;
+			var walk_fps = 10;
+			var speed = 5;
+			var key_pressed = false;
+			var you_won = false;
+			var start_confetti = false;
+			var cf = confetti({
+				fallspeed: 25
+			});
+			
+
+			var clear_screen = function() {
+				// console.log("inside clear_screen()");
+				context.clearRect(0, 0, canvas.width, canvas.height);
+			};
+
+			var man_onload = function() {
+				man_x = (canvas.width / 2) - (man_frames[0].width / 2);
+				man_y = (canvas.height / 2) - (man_frames[0].height / 2);
+			};
+
+			var init = function() {
+				// console.log("inside init()");
+				body = document.getElementsByTagName('body')[0];
+				canvas = document.createElement('canvas');
+				canvas.id = "canvas";
+				canvas.width = window.innerWidth;
+				canvas.height = window.innerHeight;
+				for (var i=0; i<man.length; ++i) {
+					man_frames.push(new Image());
+					man_frames[i].onload = man_onload;
+					man_frames[i].src = man[i];
+				}
+				// console.log("man_frames length=" + man_frames.length);
+				// console.log("canvas height: " + canvas.height + " and canvas width: " + canvas.width);
+				// console.log("man_frames[0].width=" + man_frames[0].width + " man_frames[0].height=" + man_frames[0].height);
+				// console.log("man_x = " + man_x + " man_y = " + man_y);
+				man_x = (canvas.width / 2) - (man_frames[0].width / 2);
+				man_y = (canvas.height / 2) - (man_frames[0].height / 2);
+				jukebox_x = (canvas.width - (canvas.width / 6));
+				jukebox_y = (canvas.height / 6);
+				context = canvas.getContext('2d');
+				body.appendChild(canvas);
+			};
+
+			var draw_man = function() {
+				// console.log("inside draw_man()");
+				if (man_state == "paying") {
+					context.drawImage(man_frames[12], man_x, man_y);
+					change.play();
+					man_state = "standing";
+					you_won = true;
+					return;
+				}
+				switch (man_direction) {
+					case "north":
+					if (man_state == "standing") {
+						context.drawImage(man_frames[1], man_x, man_y);
+						break;
+					}
+					if (man_walk < walk_fps) { context.drawImage(man_frames[6], man_x, man_y); man_walk++; man_y -= speed; break;}
+					else if (man_walk < (walk_fps*2)) { context.drawImage(man_frames[7], man_x, man_y); man_walk++; man_y -= speed; break;}
+					context.drawImage(man_frames[6], man_x, man_y);
+					man_walk = 0;
+					man_y -= speed; 
+					break;
+					case "east":
+					if (man_state == "standing") {
+						context.drawImage(man_frames[2], man_x, man_y);	
+						break;
+					}
+					if (man_walk < walk_fps) { context.drawImage(man_frames[8], man_x, man_y); man_walk++; man_x += speed; break; }
+					else if (man_walk < (walk_fps*2)) { context.drawImage(man_frames[9], man_x, man_y); man_walk++; man_x += speed; break; }
+					context.drawImage(man_frames[8], man_x, man_y);
+					man_walk = 0;
+					man_x += speed;
+					break;
+					case "south":
+					if (man_state == "standing") {
+						context.drawImage(man_frames[3], man_x, man_y);
+						break;
+					}
+					if (man_walk < walk_fps) { context.drawImage(man_frames[10], man_x, man_y); man_walk++; man_y += speed; break; }
+					else if (man_walk < (walk_fps*2)) { context.drawImage(man_frames[11], man_x, man_y); man_walk++; man_y += speed; break; }
+					context.drawImage(man_frames[10], man_x, man_y); 
+					man_walk = 0;
+					man_y += speed;
+					break;
+					case "west":
+					if (man_state == "standing") {
+						context.drawImage(man_frames[0], man_x, man_y);
+						break;
+					}
+					if (man_walk < walk_fps) { context.drawImage(man_frames[4], man_x, man_y); man_walk++; man_x -= speed; break; }
+					else if (man_walk < (walk_fps*2)) { context.drawImage(man_frames[5], man_x, man_y); man_walk++; man_x -= speed; break; }
+					context.drawImage(man_frames[4], man_x, man_y);
+					man_walk = 0;
+					man_x -= speed;
+					break;
+				}
+			};
+
+			var draw_jukebox = function() {
+				// console.log("inside draw_jukebox()");
+				context.drawImage(jukebox, jukebox_x, jukebox_y);
+			};
+
+			var draw_text = function() {
+				context.font = "bold 12px sans-serif";
+				context.fillText("use the arrow keys and spacebar", (canvas.width / 16), (canvas.height - (canvas.height / 16)));
+			};
+
+			var man_is_near_jukebox = function() {
+				// console.log("inside man_is_near_jukebox()");
+				if (man_x <= jukebox_x && jukebox_x <= (man_x + man_frames[0].width)) {
+					if (jukebox_y <= man_y + 150) {
+						return true;
+					}
+				}
+				return false;
+			};
+
+			var draw_you_win = function() {
+				if (jukebox_music.currentTime > 1) {
+					var zoom_speed = 5;
+					var tx = (canvas.width / 2) - (you_win_crop_width / 2);
+					var ty = (canvas.height / 2) - (you_win_crop_height / 2);
+					// console.log("context.drawImage(you_win, 0, 0," + you_win.width + ", " + you_win.height + ", " + tx + ", " + ty + ", " + you_win_crop_width + ", " + you_win_crop_height + ");");
+					context.drawImage(you_win, 0, 0, you_win.width, you_win.height, tx, ty, you_win_crop_width, you_win_crop_height);
+					if (you_win_crop_width < you_win.width) {
+						you_win_crop_width += zoom_speed;
+						you_win_crop_height += (ratio * zoom_speed);
+					}
+					if (!start_confetti) { cf.start(); start_confetti = true; }
+				}
+			};
+
+			var loop = function() {
+				// console.log("inside loop()");
+				clear_screen();
+				draw_jukebox();
+				if (!key_pressed) { draw_text(); }
+				draw_man();
+				if (you_won) {
+					draw_you_win();
+				}
+				setTimeout(loop, fps);
+			};
+
+			var keyup = function(e) {
+				// console.log("inside keyup()");
+				switch (e.keyCode) {
+					case 37:
+					case 38:
+					case 39:
+					case 40:
+					man_state = "standing";
+					stepping.pause();
+					man_walk = 0;
+					//stepping.currentTime = 0;
+					break;
+				}
+			};
+
+			var keydown = function(e) {	
+				if (!key_pressed) { key_pressed = true; }
+				// console.log("inside keydown()");
+				switch (e.keyCode) {
+					case 32:
+					if (man_is_near_jukebox()) {
+						// play quarter sound
+						man_state = "paying";
+						jukebox_music.play();
+					}
+					break;
+					case 37:
+					man_direction = "west";
+					man_state = "walking";
+					stepping.play();
+					break;
+					case 38:
+					man_direction = "north";
+					man_state = "walking";
+					stepping.play();
+					break;
+					case 39:
+					man_direction = "east";
+					man_state = "walking";
+					stepping.play();
+					break;
+					case 40:
+					man_direction = "south";
+					man_state = "walking";
+					stepping.play();
+					break;
+				}
+			};
+
+			var start = function() {
+				// console.log("inside start()");
+				init();
+				loop();
+			};
+		</script>
+	</body>
+</html>

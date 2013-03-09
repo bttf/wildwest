@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body onload="start()">
+<script>
+var body, canvas, context;
+body = canvas = context = null;
+var fps = (1000/30);
+var ratio = null;
+var center_x = null;
+var center_y = null;
+var you_win_crop_width = 1;
+var you_win_crop_height = 1;
+var you_win = new Image();
+you_win.onload = function() {
+};
+
+var init = function() {
+	body = document.getElementsByTagName('body')[0];
+	canvas = document.createElement('canvas');
+	canvas.id = "canvas";
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+	center_x = (canvas.width / 2);
+	center_y = (canvas.height / 2);
+	context = canvas.getContext('2d');
+	body.appendChild(canvas);
+	you_win.src = "./you_win.png";
+	ratio = (you_win.height / you_win.width);
+};
+
+var draw_you_win = function() {
+	var zoom_speed = 5;
+	var tx = (center_x - (you_win_crop_width / 2));
+	var ty = (center_y - (you_win_crop_height / 2));
+	context.drawImage(you_win, 0, 0, you_win.width, you_win.height, tx, ty, you_win_crop_width, you_win_crop_height);
+	if (you_win_crop_width < you_win.width) {
+		you_win_crop_width += zoom_speed;
+		you_win_crop_height += (ratio * zoom_speed);
+	}
+};
+
+var loop = function() {
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	draw_you_win();
+	setTimeout(loop, fps);
+};
+
+var start = function() {
+	init();
+	loop();
+};
+</script>
+</body>
+</html>

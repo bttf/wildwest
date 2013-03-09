@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="./index.css" />
+	</head>
+	<body onkeypress="update()">
+		<script>
+			var audio = new Audio("./nextepisode8bit.mp3");
+			audio.play();
+			var body, canvas, context;
+			body = canvas = context = null;
+			var space = null;
+			var han = null;
+			var dialog = null;
+			var dialog02 = chewie = null;
+			var title = null;
+			var title_height = 0;
+			var state = 0;
+			var interval_handler = null;
+			var init = function() {
+				body = document.getElementsByTagName('body')[0];
+				canvas = document.createElement('canvas');
+				canvas.id = "canvas";
+				canvas.width = window.innerWidth;
+				canvas.height = window.innerHeight;
+				context = canvas.getContext('2d');
+				body.appendChild(canvas);
+				space = new Image();
+				space.onload = setup;
+				space.src = "./space.png";
+
+				han = new Image();
+				han.onload = han_intro;
+				han.src = "./chewie.jpg";
+
+				dialog = new Image();
+				dialog.onload = draw_dialog;
+				dialog.src = "./dialog01.png"
+			};
+			var setup = function() {
+				for (var i=0; i<canvas.width; i+=space.width) {
+					for (var j=0; j<canvas.height; j+=space.height) {
+						context.drawImage(space, i, j);
+					}
+				}
+				console.log("it should look like space right now");
+			};
+			var han_intro = function() {
+				var cx = ((canvas.width - han.width)/2);
+				var cy = ((canvas.height - han.height)/4);
+				context.drawImage(han, cx, cy);
+				console.log("and we should see han with chewie now");
+			}
+			var draw_dialog = function() {
+				var cx = ((canvas.width - dialog.width)/2);
+				var cy = (((canvas.height - han.height)/4) + han.height);
+				context.drawImage(dialog, cx, cy);
+				console.log("dialog up");
+			};
+			var draw_dialog02 = function() {
+				var cx = ((canvas.width - dialog02.width)/2);
+				var cy = (((canvas.height - han.height)/4) + han.height);
+				context.drawImage(dialog02, cx, cy);
+				console.log("dialog02 up");
+			};
+			var draw_chewie = function() {
+				var cx = ((canvas.width - chewie.width)/2);
+				var cy = ((canvas.height - chewie.height)/4);
+				context.drawImage(chewie, cx, cy);
+				console.log("chewie up");
+			};
+			var draw_title = function() {
+				var cx = ((canvas.width - title.width)/2);
+				var cy = ((canvas.height - title.height)/2);
+				if (title_height > cy) {
+					title_height--;
+				}
+				else { window.clearInterval(interval_handler); }
+				setup();
+				context.drawImage(title, cx, title_height);
+			};
+			var title_onload = function() {
+				interval_handler = setInterval(draw_title, 20);
+			}
+			var update = function() {
+				switch (state) {
+					case 0:
+					dialog02 = new Image();
+					dialog02.onload = draw_dialog02;
+					dialog02.src = "./dialog02.png";
+					state++;
+					break;
+					case 1:
+					setup();
+					chewie = new Image();
+					chewie.onload = draw_chewie;
+					chewie.src = "./chewbacca.png";
+					dialog02.src = "./dialog03.png";
+					state++;
+					break;
+					case 2:
+					title_height = canvas.height;
+					title = new Image();
+					title.onload = title_onload; 
+					title.src = "./title.png";
+					break;
+					default:
+					break;
+				}
+				//dialog02 = new Image();
+				//dialog02.onload = function() { alert("just checking") };
+				//dialog02.src = "./dialog02.png";
+			};
+			init();
+		</script>
+	</body>
+</html>
